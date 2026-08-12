@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag to release (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
 
 permissions:
   contents: write
@@ -18,7 +24,11 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.x'
+          dotnet-quality: 'ga'
+
+      - name: Restore
+        run: dotnet restore GithubDashboard.Tests
 
       - name: Run tests
         run: dotnet test GithubDashboard.Tests --configuration Release --verbosity normal
@@ -32,12 +42,16 @@ jobs:
         include:
           - rid: win-x64
             artifact: gh-dashboard-win-x64.exe
+            exe_ext: .exe
           - rid: linux-x64
             artifact: gh-dashboard-linux-x64
+            exe_ext: ''
           - rid: osx-x64
             artifact: gh-dashboard-osx-x64
+            exe_ext: ''
           - rid: osx-arm64
             artifact: gh-dashboard-osx-arm64
+            exe_ext: ''
 
     steps:
       - uses: actions/checkout@v4
@@ -45,21 +59,22 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.x'
+          dotnet-quality: 'ga'
 
       - name: Publish single-file binary
         run: |
           dotnet publish GithubDashboard.Api \
             --configuration Release \
             --runtime ${{ matrix.rid }} \
+            --self-contained true \
             --output publish/${{ matrix.rid }}
 
-      - name: Rename artifact
+      - name: Stage artifact
         run: |
-          src="publish/${{ matrix.rid }}/gh-dashboard"
-          # Windows binary has .exe extension
-          [ -f "${src}.exe" ] && src="${src}.exe"
+          src="publish/${{ matrix.rid }}/gh-dashboard${{ matrix.exe_ext }}"
           cp "$src" "${{ matrix.artifact }}"
+          ls -lh "${{ matrix.artifact }}"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -77,12 +92,17 @@ jobs:
         with:
           merge-multiple: true
 
+      - name: List artifacts
+        run: ls -lh
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name || inputs.tag }}
           files: |
             gh-dashboard-win-x64.exe
             gh-dashboard-linux-x64
             gh-dashboard-osx-x64
             gh-dashboard-osx-arm64
           generate_release_notes: true
+          fail_on_unmatched_files: true
