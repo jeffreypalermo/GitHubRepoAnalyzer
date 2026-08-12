@@ -7,7 +7,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>GithubDashboard</RootNamespace>
     <AssemblyName>gh-dashboard</AssemblyName>
+    <!-- Base semver — bump manually for breaking/feature/patch changes.        -->
+    <!-- CI appends build.<run_number> as InformationalVersion automatically.   -->
     <Version>1.1.0</Version>
+    <VersionSuffix></VersionSuffix>
     <Description>GitHub repository analytics dashboard — TUI powered by Spectre.Console</Description>
     <Authors>Clear Measure</Authors>
 
