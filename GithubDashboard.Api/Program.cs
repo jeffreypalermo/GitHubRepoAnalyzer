@@ -377,4 +377,7 @@ if (branchMerge.Count > 0)
     AnsiConsole.Write(durationBreakdown);
 AnsiConsole.WriteLine();
 
+AnsiConsole.MarkupLine("[grey]Press any key to exit...[/]");
+Console.ReadKey(intercept: true);
+
 return 0;
