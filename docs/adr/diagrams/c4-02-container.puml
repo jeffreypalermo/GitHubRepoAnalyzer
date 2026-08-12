@@ -1,0 +1,28 @@
+@startuml c4-02-container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title GitHub Contributor Dashboard — C4 Level 2: Container
+
+Person(leader, "Engineering Leader", "Views contribution metrics")
+
+System_Boundary(dashboard, "GitHub Contributor Dashboard") {
+
+    Container(spa, "React SPA", "React 18 + TypeScript\n+ Tailwind CSS", "Renders all four\ndashboard panels;\nruns entirely in browser")
+
+    Container(api_client, "GitHub API Client", "TypeScript fetch wrapper", "Typed HTTP client for\nGitHub REST endpoints;\ncaches responses in\nsessionStorage to avoid\nrate-limit exhaustion")
+
+    Container(aggregators, "Data Aggregators", "TypeScript modules", "In-browser computation:\ncommit counts, file churn\ntallies, granularity scores,\nbranch-to-merge durations")
+
+}
+
+System_Ext(github_api, "GitHub REST API", "api.github.com\nPublic — unauthenticated\n60 req/hr limit")
+
+Rel(leader, spa, "Opens dashboard", "HTTPS")
+Rel(spa, api_client, "Requests raw data")
+Rel(api_client, github_api, "GET /repos/.../commits\nGET /repos/.../pulls\nGET /repos/.../stats/contributors", "HTTPS / JSON")
+Rel(api_client, aggregators, "Passes raw API responses")
+Rel(aggregators, spa, "Returns computed metrics")
+
+@enduml

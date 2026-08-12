@@ -1,0 +1,31 @@
+﻿# .NET build outputs
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.DotSettings.user
+
+# Publish output
+publish/
+
+# NuGet
+*.nupkg
+packages/
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+.vite-temp/
+
+# Playwright MCP working files
+.playwright-mcp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Rider / VS Code
+.idea/
+.vscode/

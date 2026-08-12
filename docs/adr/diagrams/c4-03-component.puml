@@ -1,0 +1,41 @@
+@startuml c4-03-component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title GitHub Contributor Dashboard — C4 Level 3: Component (React SPA)
+
+Container_Ext(api_client, "GitHub API Client", "TypeScript fetch wrapper", "Fetches and caches GitHub data")
+
+Container_Boundary(spa, "React SPA") {
+
+    Component(app, "App", "React component", "Root component; owns repo\nconfig and top-level layout")
+
+    Component(commits_panel, "CommitsByUser Panel", "React component", "Use Case 1:\nLeaderboard of commit\ncounts per contributor")
+
+    Component(files_panel, "MostChangedFiles Panel", "React component", "Use Case 2:\nRanked list of files\nby change frequency;\nhighlights god-class risk")
+
+    Component(granularity_panel, "CommitGranularity Panel", "React component", "Use Case 3:\nScatter / histogram of\nfiles-changed-per-commit;\nflags bloated commits")
+
+    Component(cycle_panel, "BranchToMerge Panel", "React component", "Use Case 4:\nTimeline of branch\nopen duration to PR merge;\ncycle time proxy")
+
+    Component(repo_selector, "RepoSelector", "React component", "Config widget — allows\nswapping the target repo\n(defaults to ClearMeasure\nwork orders)")
+
+    Component(rate_limit_banner, "RateLimitBanner", "React component", "Displays a warning when\nGitHub API rate limit\nis approaching or exceeded")
+
+}
+
+Rel(app, repo_selector, "Renders")
+Rel(app, commits_panel, "Renders")
+Rel(app, files_panel, "Renders")
+Rel(app, granularity_panel, "Renders")
+Rel(app, cycle_panel, "Renders")
+Rel(app, rate_limit_banner, "Renders")
+
+Rel(commits_panel, api_client, "useContributorStats()")
+Rel(files_panel, api_client, "useCommitFiles()")
+Rel(granularity_panel, api_client, "useCommitFiles()")
+Rel(cycle_panel, api_client, "usePullRequests()")
+Rel(rate_limit_banner, api_client, "useRateLimit()")
+
+@enduml

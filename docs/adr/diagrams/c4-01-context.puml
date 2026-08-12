@@ -1,0 +1,20 @@
+@startuml c4-01-context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title GitHub Contributor Dashboard — C4 Level 1: System Context
+
+Person(leader, "Engineering Leader", "Needs visibility into\nteam contribution patterns\nwithout grepping git logs")
+
+System(dashboard, "GitHub Contributor Dashboard", "Browser-only SPA that visualises\ncommit patterns, file churn,\ngranularity, and cycle time\nfor a GitHub repository")
+
+System_Ext(github_api, "GitHub REST API", "api.github.com\nPublic endpoints — no auth\nrequired for public repos")
+
+System_Ext(github_repo, "ClearMeasure Work Orders\n(Public GitHub Repo)", "Target repository providing\ncommit history, PR history,\nand branch data")
+
+Rel(leader, dashboard, "Opens in browser", "HTTPS")
+Rel(dashboard, github_api, "Fetches commits, PRs,\ncontributor stats", "HTTPS / JSON")
+Rel(github_api, github_repo, "Reads repository data")
+
+@enduml

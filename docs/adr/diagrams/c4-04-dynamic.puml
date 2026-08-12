@@ -1,0 +1,28 @@
+@startuml c4-04-dynamic
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+LAYOUT_WITH_LEGEND()
+
+title GitHub Contributor Dashboard — C4 Level 4: Dynamic View\n(Dashboard Load Sequence)
+
+Person(leader, "Engineering Leader")
+
+Container(spa, "React SPA", "React + TypeScript + Tailwind")
+Container(cache, "sessionStorage Cache", "Browser sessionStorage")
+Container(api_client, "GitHub API Client", "TypeScript fetch wrapper")
+System_Ext(github, "GitHub REST API", "api.github.com")
+
+Rel(leader, spa, "1. Opens dashboard URL in browser")
+Rel(spa, api_client, "2. Initialise — resolve repo owner/name")
+Rel(api_client, cache, "3. Check cache (HIT → skip steps 4-7)")
+Rel(api_client, github, "4. GET /repos/{owner}/{repo}/stats/contributors")
+Rel(github, api_client, "5. 200 OK — contributor commit counts")
+Rel(api_client, github, "6. GET /repos/{owner}/{repo}/commits?per_page=100")
+Rel(github, api_client, "7. 200 OK — commit list with file diffs")
+Rel(api_client, github, "8. GET /repos/{owner}/{repo}/pulls?state=closed&per_page=100")
+Rel(github, api_client, "9. 200 OK — merged PR list with timestamps")
+Rel(api_client, cache, "10. Write responses to sessionStorage")
+Rel(api_client, spa, "11. Return typed aggregated metrics")
+Rel(spa, leader, "12. Render four dashboard panels")
+
+@enduml
