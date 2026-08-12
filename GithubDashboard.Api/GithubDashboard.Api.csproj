@@ -12,6 +12,12 @@
     <Version>1.1.0</Version>
     <Description>GitHub repository analytics dashboard — TUI powered by Spectre.Console</Description>
     <Authors>Clear Measure</Authors>
+    <PackageId>GithubDashboard.Tool</PackageId>
+    <RepositoryUrl>https://github.com/jeffreypalermo/GitHubRepoAnalyzer</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <!-- Publish as a dotnet global tool so it appears in GitHub Packages -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>gh-dashboard</ToolCommandName>
 
     <!-- Single-file self-contained publish -->
     <PublishSingleFile>true</PublishSingleFile>

@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   test:
@@ -140,3 +141,36 @@ jobs:
             gh-dashboard-osx-arm64
           generate_release_notes: true
           fail_on_unmatched_files: true
+
+  nuget:
+    name: Publish NuGet package to GitHub Packages
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+          dotnet-quality: 'ga'
+
+      - name: Resolve version
+        id: ver
+        run: |
+          BASE="${{ vars.VERSION_BASE || '1.1' }}"
+          echo "version=${BASE}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
+      - name: Pack
+        run: |
+          dotnet pack GithubDashboard.Api \
+            --configuration Release \
+            --output nupkgs \
+            -p:Version=${{ steps.ver.outputs.version }}
+
+      - name: Push to GitHub Packages
+        run: |
+          dotnet nuget push nupkgs/*.nupkg \
+            --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            --api-key "${{ secrets.GITHUB_TOKEN }}" \
+            --skip-duplicate
