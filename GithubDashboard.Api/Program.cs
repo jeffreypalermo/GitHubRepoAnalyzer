@@ -9,27 +9,28 @@ string repo;
 
 AnsiConsole.Write(new FigletText("GH Dashboard").Color(Color.SteelBlue1));
 
-// Command-line argument: gh-dashboard owner/repo
-if (args.Length == 1 && args[0].Contains('/'))
+// Command-line argument: gh-dashboard owner/repo  OR  gh-dashboard https://github.com/owner/repo
+if (args.Length == 1)
 {
-    var parts = args[0].Split('/', 2);
-    owner = parts[0];
-    repo  = parts[1];
+    if (!InputParser.TryParseOwnerRepo(args[0], out owner, out repo))
+    {
+        AnsiConsole.MarkupLine($"[red]Invalid repository:[/] {Markup.Escape(args[0])}\n" +
+                               "[grey]Expected owner/repo or a github.com URL.[/]");
+        return 1;
+    }
 }
 else
 {
     // TUI prompt — pre-filled with the example repo
     var input = AnsiConsole.Prompt(
-        new TextPrompt<string>("[grey]Enter[/] [steelblue1]owner/repo[/]")
+        new TextPrompt<string>("[grey]Enter[/] [steelblue1]owner/repo[/] [grey]or GitHub URL (ENTER for default)[/]")
             .DefaultValue("ClearMeasureLabs/bootcamp-palermo-workorders")
             .Validate(v =>
-                v.Contains('/')
+                InputParser.TryParseOwnerRepo(v, out _, out _)
                     ? ValidationResult.Success()
-                    : ValidationResult.Error("[red]Must be in owner/repo format[/]")));
+                    : ValidationResult.Error("[red]Must be owner/repo or a github.com URL[/]")));
 
-    var parts = input.Split('/', 2);
-    owner = parts[0];
-    repo  = parts[1];
+    InputParser.TryParseOwnerRepo(input, out owner, out repo);
 }
 
 var ct = new CancellationTokenSource();
@@ -187,6 +188,14 @@ for (int i = 0; i < Math.Min(contributors.Count, 20); i++)
 AnsiConsole.Write(contribTable);
 AnsiConsole.WriteLine();
 
+var contribChart = new BarChart()
+    .Label("[grey]Commits by contributor[/]")
+    .CenterLabel();
+foreach (var c in contributors.Take(10))
+    contribChart.AddItem(c.Login, c.TotalCommits, Color.SteelBlue1);
+AnsiConsole.Write(contribChart);
+AnsiConsole.WriteLine();
+
 // ── UC2: Most-changed files ───────────────────────────────────────────────────
 
 var filesTable = new Table()
@@ -215,6 +224,14 @@ for (int i = 0; i < Math.Min(fileStats.Count, 20); i++)
         $"[indianred1]{bar}[/]");
 }
 AnsiConsole.Write(filesTable);
+AnsiConsole.WriteLine();
+
+var churnChart = new BarChart()
+    .Label("[grey]File churn (changes)[/]")
+    .CenterLabel();
+foreach (var f in fileStats.Take(10))
+    churnChart.AddItem(f.Filename, f.ChangeCount, Color.IndianRed1);
+AnsiConsole.Write(churnChart);
 AnsiConsole.WriteLine();
 
 // ── UC3: Commit granularity ───────────────────────────────────────────────────
@@ -276,6 +293,18 @@ granularityTable.Caption(
 AnsiConsole.Write(granularityTable);
 AnsiConsole.WriteLine();
 
+var granularityColors = new[] { Color.Green, Color.GreenYellow, Color.Yellow, Color.Orange1, Color.Red };
+var granularityBreakdown = new BreakdownChart().FullSize();
+for (int i = 0; i < bucketOrder.Length; i++)
+{
+    var label = bucketOrder[i];
+    int count = buckets.GetValueOrDefault(label);
+    if (count > 0)
+        granularityBreakdown.AddItem(label.Trim(), count, granularityColors[i]);
+}
+AnsiConsole.Write(granularityBreakdown);
+AnsiConsole.WriteLine();
+
 // ── UC4: Branch-to-merge duration ────────────────────────────────────────────
 
 static string FormatDuration(double h) =>
@@ -327,6 +356,25 @@ prTable.Caption(
     $"[grey]{branchMerge.Count} merged PRs · avg {FormatDuration(avgDuration)} · " +
     $"{within24Pct:F0}% within 24h[/]");
 AnsiConsole.Write(prTable);
+AnsiConsole.WriteLine();
+
+// duration breakdown: ≤24h / 25-72h / 73-168h / >168h
+var durationBands = new (string Label, Func<double, bool> Match, Color Col)[]
+{
+    ("≤24h",   h => h <= 24,              Color.Green),
+    ("1–3d",   h => h > 24  && h <= 72,  Color.Yellow),
+    ("3–7d",   h => h > 72  && h <= 168, Color.Orange1),
+    (">7d",    h => h > 168,             Color.Red),
+};
+var durationBreakdown = new BreakdownChart().FullSize();
+foreach (var (label, match, col) in durationBands)
+{
+    int count = branchMerge.Count(s => match(s.DurationHours));
+    if (count > 0)
+        durationBreakdown.AddItem(label, count, col);
+}
+if (branchMerge.Count > 0)
+    AnsiConsole.Write(durationBreakdown);
 AnsiConsole.WriteLine();
 
 return 0;
