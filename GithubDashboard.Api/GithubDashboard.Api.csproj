@@ -7,10 +7,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>GithubDashboard</RootNamespace>
     <AssemblyName>gh-dashboard</AssemblyName>
-    <!-- Base semver — bump manually for breaking/feature/patch changes.        -->
-    <!-- CI appends build.<run_number> as InformationalVersion automatically.   -->
+    <!-- major.minor base — CI sets patch = github.run_number at publish time.  -->
+    <!-- To cut a named release: git tag v1.2.0 && git push origin v1.2.0      -->
     <Version>1.1.0</Version>
-    <VersionSuffix></VersionSuffix>
     <Description>GitHub repository analytics dashboard — TUI powered by Spectre.Console</Description>
     <Authors>Clear Measure</Authors>
 

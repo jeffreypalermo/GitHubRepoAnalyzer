@@ -1,4 +1,5 @@
 name: Release
+run-name: "v${{ vars.VERSION_BASE || '1.1' }}.${{ github.run_number }} — ${{ github.ref_name }} by @${{ github.actor }}"
 
 on:
   push:
@@ -9,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Version tag to release (e.g. v1.1.0)'
+        description: 'Version tag to release (e.g. v1.1.5)'
         required: true
-        default: 'v1.1.0'
+        default: 'v1.1.5'
 
 permissions:
   contents: write
@@ -66,12 +67,13 @@ jobs:
 
       - name: Publish single-file binary
         run: |
+          BASE="${{ vars.VERSION_BASE || '1.1' }}"
           dotnet publish GithubDashboard.Api \
             --configuration Release \
             --runtime ${{ matrix.rid }} \
             --self-contained true \
             --output publish/${{ matrix.rid }} \
-            -p:VersionSuffix=build.${{ github.run_number }}
+            -p:Version=${BASE}.${{ github.run_number }}
 
       - name: Stage artifact
         run: |
@@ -112,10 +114,10 @@ jobs:
             echo "tag=${{ inputs.tag }}"  >> "$GITHUB_OUTPUT"
             echo "prerelease=false"       >> "$GITHUB_OUTPUT"
           else
-            # Every master push — rolling build tag
-            BASE_VERSION=$(grep -oPm1 '(?<=<Version>)[^<]+' GithubDashboard.Api/GithubDashboard.Api.csproj)
-            echo "tag=${BASE_VERSION}.build.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
-            echo "prerelease=true"        >> "$GITHUB_OUTPUT"
+            # Every master push — version is major.minor.build
+            BASE="${{ vars.VERSION_BASE || '1.1' }}"
+            echo "tag=${BASE}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true"                      >> "$GITHUB_OUTPUT"
           fi
 
       - name: Create or update release tag
